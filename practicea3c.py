@@ -94,7 +94,6 @@ class Actor():
 		actions = np.random.choice(list(range(self.numActions)), 
 			p=actionsDistribution)
 		# actions = np.argmax(actionsDistribution)
-		print(actionsDistribution, actions)
 		return actions, values
 
 class Worker():
@@ -181,6 +180,8 @@ class Worker():
 				self.actor.policyFunction.inputs: self.replayBuffer.states
 			})
 		self.file_writer.add_summary(summary, self.totalTransitions)
+
+		print('At iteration {}, our mean reward is {}'.format(self.totalTransitions, self.replayBuffer.meanRewards))
 		# empty the replay buffer so we can store stuff in it again
 		self.replayBuffer.empty()
 
@@ -210,6 +211,7 @@ class ReplayBuffer():
 		self.advantages = discount(self.advantages, gamma)
 
 		self.states = np.squeeze(self.states, axis=1)
+		self.meanRewards = np.mean(self.rewards)
 
 	def addTransition(self, state, action, reward, done, nextState, value):
 		self.size += 1
