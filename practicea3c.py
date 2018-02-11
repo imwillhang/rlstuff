@@ -18,7 +18,6 @@ sess = tf.Session()
 # Taken straight from Nature paper from DeepMind
 def NatureCNN(images):
 	# we apply the basic Nature feature extractor
-	he_uniform = keras.initializers.he_uniform
 	conv1_1 = layers.conv2d(images, 32, 8, stride=4)
 	conv2_1 = layers.conv2d(conv1_1, 64, 4, stride=2)
 	conv3_1 = layers.conv2d(conv2_1, 64, 3, stride=1)
