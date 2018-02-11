@@ -97,7 +97,7 @@ class Actor():
 
 class Worker():
 	def __init__(self, env, name, PolicyType, policyParams, gamma, 
-		PolicyOptimizer, outputPath, maxGradNorm=0.5, history=4, batchSize=1000):
+		PolicyOptimizer, outputPath, maxGradNorm=0.5, history=4, batchSize=64):
 		self.gamma = gamma
 		self.history = history
 		self.batchSize = batchSize
