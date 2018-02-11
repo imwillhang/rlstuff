@@ -211,7 +211,7 @@ class ReplayBuffer():
 		self.advantages = discount(self.advantages, gamma)
 
 		#self.states = np.squeeze(self.states, axis=1)
-		self.states = np.reshape(self.states, (-1, *self.stateDims))
+		self.states = np.reshape(self.states, (-1,) + tuple(self.stateDims))
 		self.meanRewards = np.mean(self.rewards)
 
 	def addTransition(self, state, action, reward, done, nextState, value):
