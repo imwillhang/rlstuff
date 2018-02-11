@@ -112,7 +112,7 @@ class Worker():
 		
 		self.actor = Actor(PolicyType, policyParams)
 		#remove#self.swapPolicy = updatePolicy('global', self.name)
-		self.replayBuffer = ReplayBuffer()
+		self.replayBuffer = ReplayBuffer(policyParams['inputDims'])
 		self.policyOptimizer = PolicyOptimizer(
 			self.actor, gamma, 'worker', None, 5e-4, maxGradNorm)
 		self.addSummary()
@@ -196,8 +196,9 @@ def discount(x, gamma):
     return scipy.signal.lfilter([1], [1, -gamma], x[::-1], axis=0)[::-1]
 
 class ReplayBuffer():
-	def __init__(self):
+	def __init__(self, stateDims):
 		self.empty()
+		self.stateDims = stateDims
 
 	def processRollouts(self, bootstrapVal=None, gamma=0.99):
 		# add bootstrap value to rewards
@@ -209,7 +210,8 @@ class ReplayBuffer():
 		self.advantages = self.rewards + gamma * values_[1:] - values_[:-1]
 		self.advantages = discount(self.advantages, gamma)
 
-		self.states = np.squeeze(self.states, axis=1)
+		#self.states = np.squeeze(self.states, axis=1)
+		self.reshape = np.reshape(-1, *self.stateDims)
 		self.meanRewards = np.mean(self.rewards)
 
 	def addTransition(self, state, action, reward, done, nextState, value):
