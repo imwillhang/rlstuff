@@ -148,7 +148,7 @@ class Worker():
 				self.replayBuffer.addTransition(state, action, reward, done, nextState, value)
 				state = nextState
 
-				self.env.render()
+				#self.env.render()
 				# if our buffer is full
 				if self.replayBuffer.size >= self.batchSize:
 					# process rollouts first to calculate discounted rewards
