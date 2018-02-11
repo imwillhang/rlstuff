@@ -9,7 +9,7 @@ import tensorflow.contrib.slim as slim
 import numpy as np
 from preprocess import greyscale as processFrame
 
-from tensorflow import nn, keras, losses
+from tensorflow import nn, losses
 
 import scipy.signal
 
