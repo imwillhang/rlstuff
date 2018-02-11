@@ -7,7 +7,7 @@ env = gym.make('Pong-v0')
 
 policyParams = {
 	'scope': 'worker',
-	'reuse': False#tf.AUTO_REUSE,
+	'reuse': False,#tf.AUTO_REUSE,
 	'inputDims': [80, 80, 4],
 	'outputDims': env.action_space.n
 }
