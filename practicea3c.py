@@ -84,8 +84,8 @@ class Actor():
 		self.policyFunction = PolicyType(**policyParams)
 
 	def getActionsValues(self, state):
-		actionsDistribution, values = sess.run(
-			[self.policyFunction.policy, self.policyFunction.value],
+		actionsDistribution, values, logits = sess.run(
+			[self.policyFunction.policy, self.policyFunction.value, self.policyFunction.logits],
 			feed_dict={
 				self.policyFunction.inputs: state
 			})
@@ -97,7 +97,7 @@ class Actor():
 
 class Worker():
 	def __init__(self, env, name, PolicyType, policyParams, gamma, 
-		PolicyOptimizer, outputPath, maxGradNorm=0.5, history=4, batchSize=64):
+		PolicyOptimizer, outputPath, maxGradNorm=10, history=4, batchSize=16):
 		self.gamma = gamma
 		self.history = history
 		self.batchSize = batchSize
@@ -114,12 +114,12 @@ class Worker():
 		#remove#self.swapPolicy = updatePolicy('global', self.name)
 		self.replayBuffer = ReplayBuffer(policyParams['inputDims'])
 		self.policyOptimizer = PolicyOptimizer(
-			self.actor, gamma, 'worker', None, 5e-4, maxGradNorm)
+			self.actor, gamma, 'worker', None, 4e-4, maxGradNorm)
 		self.addSummary()
-
-	def runPolicy(self):
 		sess.run(tf.global_variables_initializer())
 		sess.run(tf.local_variables_initializer())
+
+	def runPolicy(self):
 		with sess.as_default(), sess.graph.as_default():
 			#while not coord.should_stop():
 			# first we need to update the worker policy with the
@@ -148,7 +148,7 @@ class Worker():
 				self.replayBuffer.addTransition(state, action, reward, done, nextState, value)
 				state = nextState
 
-				#self.env.render()
+				self.env.render()
 				# if our buffer is full
 				if self.replayBuffer.size >= self.batchSize:
 					# process rollouts first to calculate discounted rewards
@@ -169,8 +169,9 @@ class Worker():
 		self.replayBuffer.processRollouts(
 			bootstrapVal=bootstrapVal, gamma=self.gamma)
 		# perform training
-		_, summary = sess.run([
-			self.policyOptimizer.train, self.merged],
+
+		_, summary, entropy, norm = sess.run([
+			self.policyOptimizer.train, self.merged, self.policyOptimizer.entropy, self.policyOptimizer.norm],
 			feed_dict={
 				self.policyOptimizer.actions: self.replayBuffer.actions,
 				self.policyOptimizer.values: self.replayBuffer.discountedRewards,
@@ -178,9 +179,8 @@ class Worker():
 				self.policyOptimizer.rewards: self.replayBuffer.rewards,
 				self.actor.policyFunction.inputs: self.replayBuffer.states
 			})
-		self.file_writer.add_summary(summary, self.totalTransitions)
 
-		print('At iteration {}, our mean reward is {}'.format(self.totalTransitions, self.replayBuffer.meanRewards))
+		print('At iteration {}, our mean reward is {} with entropy {}'.format(self.totalTransitions, self.replayBuffer.meanRewards, entropy))
 		# empty the replay buffer so we can store stuff in it again
 		self.replayBuffer.empty()
 
@@ -271,7 +271,7 @@ class GAEOptimizer():
 		self.gradients = tf.gradients(self.loss, variables)
 		self.optimizer = tf.train.AdamOptimizer(learning_rate=self.lr)
 		if self.maxGradNorm is not None:
-			self.gradients, norm = tf.clip_by_global_norm(self.gradients, self.maxGradNorm)
+			self.gradients, self.norm = tf.clip_by_global_norm(self.gradients, self.maxGradNorm)
 
 	def updateGlobalVariables(self):
 		# performs a global update
