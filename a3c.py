@@ -99,6 +99,7 @@ class Worker():
 		self.episodes = 0
 
 		self.actor = Actor(config, sess)
+
 		self.replay_buffer = ReplayBuffer(config.input_dims)
 
 		self.total_rewards = []
@@ -208,12 +209,11 @@ class Worker():
 			labels=self.action,
 			logits=actor.policy.logits)
 
-		#advantage = tf.reduce_mean(self.target_v - actor.policy.vf)
-
 		policy_loss = tf.reduce_mean(self.adv * log_prob)
 		value_loss = tf.losses.mean_squared_error(self.target_v, actor.policy.vf)
 		# make sure we pass in the probability distribution
-		self.entropy = -tf.reduce_mean(tf.reduce_sum(tf.nn.softmax(actor.policy.logits) * tf.nn.log_softmax(actor.policy.logits + 1e-7), axis=1))
+		self.entropy = -tf.reduce_mean(tf.reduce_sum(tf.nn.softmax(actor.policy.logits) * \
+			tf.nn.log_softmax(actor.policy.logits + 1e-7), axis=1))
 
 		self.loss = policy_loss + self.config.vf_coeff * value_loss - \
 			self.config.entropy_coeff * self.entropy
@@ -229,9 +229,6 @@ class Worker():
 	def process_rollouts(self, bootstrap=None):
 		buff = self.replay_buffer
 		
-		# buff.rewards = np.squeeze(buff.rewards)
-		# buff.values = np.squeeze(buff.values)
-		
 		reward_with_v = np.concatenate([buff.rewards, [0 if bootstrap == None else bootstrap]])
 		value_with_v = np.concatenate([buff.values, [0 if bootstrap == None else bootstrap]])
 
@@ -240,7 +237,7 @@ class Worker():
 		temporal_diff = buff.rewards + self.config.gamma * value_with_v[1:] - value_with_v[:-1]
 
 		advantage = discount(temporal_diff, self.config.gamma)
-		#advantage = reward_with_v[:-1] - value_with_v[:-1]
+
 		return disc_reward, advantage
 
 	def sync(self):

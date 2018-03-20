@@ -19,7 +19,7 @@ parser.add_argument('--entropy_coeff', type=float, default=0.01,
                     help='entropy loss coefficient')
 parser.add_argument('--lr', type=float, default=7e-4,
                     help='learning rate')
-parser.add_argument('--max_grad_norm', type=float, default=5,
+parser.add_argument('--max_grad_norm', type=float, default=0.5,
                     help='maximum gradient norm for clipping')
 parser.add_argument('--gamma', type=float, default=0.99,
                     help='discount factor')
